@@ -31647,6 +31647,7 @@ var gamingPlatform;
 })(gamingPlatform || (gamingPlatform = {}));
 //# sourceMappingURL=angularExceptionHandler.js.map
 ;
+//type Sets = {white: Points[]; black: Points[];}
 var gameService = gamingPlatform.gameService;
 var alphaBetaService = gamingPlatform.alphaBetaService;
 var translate = gamingPlatform.translate;
@@ -31702,41 +31703,6 @@ var gameLogic;
         tryPoints(row, col);
         return points;
     }
-    //Helper for getSets
-    function mergeBoards(leader, links) {
-        var dim = leader.length;
-        var finalleader = copyObject(leader);
-        var row, col;
-        for (row = 0; row < dim; row++) {
-            for (col = 0; col < dim; col++) {
-                if (links[row][col] !== '') {
-                    finalleader[row][col] = links[row][col];
-                }
-            }
-        }
-        return finalleader;
-    }
-    // needed by evaluateBoard
-    // groups all contiguous stones as sets
-    function getSets(board) {
-        var dim = board.length;
-        var visited = createNewBoard(dim);
-        var setsX = []; // black sets
-        var setsO = []; // white sets
-        var row, col;
-        for (row = 0; row < dim; row++) {
-            for (col = 0; col < dim; col++) {
-                if (board[row][col] === 'B' && visited[row][col] === '') {
-                    setsX.push(getWeb('B', row, col, board, visited));
-                }
-                else if (board[row][col] === 'W' && visited[row][col] === '') {
-                    setsO.push(getWeb('W', row, col, board, visited));
-                }
-            }
-        }
-        return { black: setsX, white: setsO };
-    }
-    gameLogic.getSets = getSets;
     // Changes all arr locations in board to '' (empty)
     function cleanBoard(board, arr) {
         var newboard = copyObject(board);
@@ -31747,40 +31713,9 @@ var gameLogic;
         }
         return newboard;
     }
-    // For each set in forest, tries to find a liberty
-    // If no liberties, then the set is captured
-    function getLiberties(board, forest) {
-        var dim = board.length;
-        var boardAfterEval = copyObject(board);
-        for (var i = 0; i < forest.length; i++) {
-            var liberties = 0; // liberties found
-            var tempset = forest[i];
-            for (var i2 = 0; i2 < tempset.length; i2++) {
-                var row = tempset[i2][0];
-                var col = tempset[i2][1];
-                if ((row - 1 >= 0 && board[row - 1][col] === '') ||
-                    (row + 1 < dim && board[row + 1][col] === '') ||
-                    (col - 1 >= 0 && board[row][col - 1] === '') ||
-                    (col + 1 < dim && board[row][col + 1] === '')) {
-                    liberties++;
-                    break;
-                }
-            }
-            if (liberties === 0) {
-                boardAfterEval = cleanBoard(boardAfterEval, tempset);
-            }
-        }
-        return boardAfterEval;
-    }
     // evaluates WEIQI board using union-find algorithm
     function evaluateBoard(board, turn) {
-        var forest = getSets(board);
-        var black = forest.black;
-        var white = forest.white;
-        // Iterate through the sets to find ones without liberties
-        // First analyze the liberties of the opponent
-        var boardAfterEval = getLiberties(board, turn === 0 ? white : black);
-        boardAfterEval = getLiberties(boardAfterEval, turn === 0 ? black : white);
+        var boardAfterEval = copyObject(board);
         return boardAfterEval;
     }
     function isBoardFull(board) {
@@ -31793,105 +31728,201 @@ var gameLogic;
         }
         return true;
     }
-    // returns a random move that the computer plays
-    function createComputerMove(board, passes, turnIndexBeforeMove, previousPosJustCapturedForKo) {
+    function createComputerMove(board, turnIndexBeforeMove) {
         var possibleMoves = [];
         var dim = board.length;
         for (var i = 0; i < dim; i++) {
             for (var j = 0; j < dim; j++) {
                 var delta = { row: i, col: j };
                 try {
-                    var testmove = createMove(board, passes, null, delta, turnIndexBeforeMove, previousPosJustCapturedForKo);
+                    var testmove = createMove(board, delta, turnIndexBeforeMove);
                     possibleMoves.push(testmove);
                 }
                 catch (e) {
+                    // cell in that position was full
                 }
             }
         }
         try {
             var delta = { row: -1, col: -1 };
-            var testmove = createMove(board, passes, null, delta, turnIndexBeforeMove, previousPosJustCapturedForKo);
+            var testmove = createMove(board, delta, turnIndexBeforeMove);
             possibleMoves.push(testmove);
         }
         catch (e) {
+            // Couldn't add pass as a move?
         }
         var randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
         return randomMove;
     }
     gameLogic.createComputerMove = createComputerMove;
-    /** Returns the number of pieces of the color for turnIndex. */
-    function getboardNum(board, turnIndex) {
-        var sum = 0;
-        var dim = board.length;
-        var color = turnIndex ? 'W' : 'B';
-        for (var i = 0; i < dim; i++)
-            for (var j = 0; j < dim; j++)
-                if (board[i][j] === color)
-                    sum++;
-        return sum;
-    }
-    function getPosJustCapturedForKo(boardBeforeMove, boardAfterMove, turnIndex) {
-        var oppositeColor = turnIndex ? 'B' : 'W';
-        var result = null;
-        var dim = boardBeforeMove.length;
-        for (var i = 0; i < dim; i++) {
-            for (var j = 0; j < dim; j++) {
-                if (boardBeforeMove[i][j] === oppositeColor && boardAfterMove[i][j] === '') {
-                    // We ate an opponent piece
-                    if (result === null) {
-                        result = { row: i, col: j };
-                    }
-                    else {
-                        return null; // we ate more than one piece
-                    }
-                }
+    // find whether there are five chesses, if so, end game
+    // up and down
+    function udCount(dim, board, temp, x, y) {
+        var count = 0;
+        console.warn("SQR's home = " + board[x][y]);
+        console.warn("SQR's fake home = " + temp);
+        for (var i = x - 1; i >= 0; i--) {
+            //console.warn("SQR's home = " + board[i][y]);
+            if (angular.equals(board[i][y], temp)) {
+                //count++;
+                ++count;
+                console.warn("SQR00 = " + count);
+            }
+            else {
+                break;
             }
         }
-        return result;
+        for (var i = x + 1; i < dim; i++) {
+            if (angular.equals(board[i][y], temp)) {
+                //count++;
+                ++count;
+                console.warn("SQR11 = " + count);
+            }
+            else {
+                console.warn("SQR bad bad! ");
+                break;
+            }
+        }
+        console.warn("lr count: " + count);
+        return count;
     }
-    function createMove(board, passes, deadBoard, delta, turnIndexBeforeMove, previousPosJustCapturedForKo) {
-        if (!passes)
-            passes = 0;
+    // left and right
+    function lrCount(dim, board, temp, x, y) {
+        var count = 0;
+        for (var i = y - 1; i >= 0; i--) {
+            if (angular.equals(board[x][i], temp)) {
+                //count++;
+                ++count;
+            }
+            else {
+                break;
+            }
+        }
+        for (var i = y + 1; i < dim; i++) {
+            if (angular.equals(board[x][i], temp)) {
+                ++count;
+                //count++;
+            }
+            else {
+                break;
+            }
+        }
+        return count;
+    }
+    // right down and left up
+    function rdCount(dim, board, temp, x, y) {
+        var count = 0;
+        for (var i = x + 1, j = y - 1; i < dim && j >= 0;) {
+            if (angular.equals(board[i][j], temp)) {
+                //count++;
+                ++count;
+            }
+            else {
+                break;
+            }
+            i++;
+            j--;
+        }
+        for (var i = x - 1, j = y + 1; i >= 0 && j < dim;) {
+            if (angular.equals(board[i][j], temp)) {
+                ++count;
+                //count++;
+            }
+            else {
+                break;
+            }
+            i--;
+            j++;
+        }
+        return count;
+    }
+    // left down and right up
+    function ldCount(dim, board, temp, x, y) {
+        var count = 0;
+        for (var i = x - 1, j = y - 1; i >= 0 && j >= 0;) {
+            if (angular.equals(board[i][j], temp)) {
+                ++count;
+                //count++;
+            }
+            else {
+                break;
+            }
+            i--;
+            j--;
+        }
+        for (var i = x + 1, j = y + 1; i < dim && j < dim;) {
+            if (angular.equals(board[i][j], temp)) {
+                ++count;
+                //count++;
+            }
+            else {
+                break;
+            }
+            i++;
+            j++;
+        }
+        return count;
+    }
+    // check whether one has won
+    function isWin(dim, board, turnIndex, x, y) {
+        var count = 0;
+        var temp = 'B'; //default:black 
+        if (turnIndex === 0) {
+            temp = 'W';
+        } //白色  
+        //console.warn("llllllllllll: " + temp);
+        // console.log("temp=" + temp);
+        if (udCount(dim, board, temp, x, y) === 4) {
+            count = udCount(dim, board, temp, x, y);
+        }
+        else if (lrCount(dim, board, temp, x, y) === 4) {
+            count = lrCount(dim, board, temp, x, y);
+        }
+        else if (rdCount(dim, board, temp, x, y) === 4) {
+            count = rdCount(dim, board, temp, x, y);
+        }
+        else if (ldCount(dim, board, temp, x, y) === 4) {
+            count = ldCount(dim, board, temp, x, y);
+        }
+        //console.warn("is_wim count: " + count);
+        return count;
+    }
+    function createMove(board, delta, turnIndexBeforeMove) {
         var dim = board.length;
-        var setnumBefore = getboardNum(board, turnIndexBeforeMove);
         var boardAfterMove = copyObject(board);
-        var passesAfterMove = passes;
         var row = delta.row;
         var col = delta.col;
-        if (row === -1 && col === -1) {
-            // delta of {-1, -1} indicates a pass (no move made)
-            passesAfterMove++;
-            if (passesAfterMove > 2) {
-                throw Error('Exceeded number of possible passes.');
-            }
-        }
-        else if (boardAfterMove[row][col] !== '') {
+        if (boardAfterMove[row][col] !== '') {
             // if space isn't '' then bad move
             throw Error('Space is not empty!');
         }
-        else {
-            // else make the move/change the board
-            if (previousPosJustCapturedForKo && previousPosJustCapturedForKo.row === row && previousPosJustCapturedForKo.col === col) {
-                throw Error("KO!");
-            }
-            // bad delta should automatically throw error
-            boardAfterMove[row][col] = turnIndexBeforeMove === 0 ? 'B' : 'W';
-            passesAfterMove = 0; //if a move is made, passes is reset
-            // evaluate board
-            boardAfterMove = evaluateBoard(boardAfterMove, turnIndexBeforeMove);
-        }
-        var setnumAfter = getboardNum(boardAfterMove, turnIndexBeforeMove);
-        if (setnumAfter <= setnumBefore && passes === passesAfterMove)
-            throw Error('you can not suicide.');
-        if (angular.equals(board, boardAfterMove) && passes === passesAfterMove)
+        boardAfterMove[row][col] = turnIndexBeforeMove === 0 ? 'B' : 'W';
+        // evaluate board
+        boardAfterMove = evaluateBoard(boardAfterMove, turnIndexBeforeMove);
+        if (angular.equals(board, boardAfterMove))
             throw Error("don’t allow a move that brings the game back to stateBeforeMove.");
-        var posJustCapturedForKo = getPosJustCapturedForKo(board, boardAfterMove, turnIndexBeforeMove);
         var endMatchScores = null;
         var turnIndexAfterMove = 1 - turnIndexBeforeMove;
-        if (isBoardFull(boardAfterMove)) {
-            endMatchScores = [-1, -1];
+        var countAfterMove = isWin(dim, boardAfterMove, turnIndexAfterMove, row, col);
+        if (countAfterMove === 4) {
+            //throw Error('Win');
+            console.warn("win: " + turnIndexBeforeMove);
+            if (turnIndexAfterMove === 0) {
+                endMatchScores = [0, 1];
+            }
+            else {
+                endMatchScores = [1, 0];
+            }
             turnIndexAfterMove = -1;
+            console.warn("Make A Move, the next: " + turnIndexAfterMove);
         }
+        else {
+            if (isBoardFull(boardAfterMove)) {
+                endMatchScores = [-1, -1];
+                turnIndexAfterMove = -1;
+            }
+        }
+        console.error("end the judge");
         return {
             endMatchScores: endMatchScores,
             turnIndex: turnIndexAfterMove,
@@ -31899,21 +31930,10 @@ var gameLogic;
                 board: boardAfterMove,
                 boardBeforeMove: board,
                 delta: delta,
-                passes: passesAfterMove,
-                posJustCapturedForKo: posJustCapturedForKo,
-                deadBoard: deadBoard,
             },
         };
     }
     gameLogic.createMove = createMove;
-    function createEndMove(state, endMatchScores) {
-        return {
-            endMatchScores: endMatchScores,
-            turnIndex: -1,
-            state: state,
-        };
-    }
-    gameLogic.createEndMove = createEndMove;
 })(gameLogic || (gameLogic = {}));
 
 ;
@@ -31932,7 +31952,6 @@ var game;
     game.moveToConfirm = null;
     game.delta = null;
     game.posJustCapturedForKo = null;
-    game.deadBoard = null;
     game.score = { white: 0, black: 0 };
     // For community games.
     game.playerIdToProposal = null;
@@ -32146,33 +32165,17 @@ var game;
         return boardStr;
     }
     game.getStateForOgImage = getStateForOgImage;
-    function getPasses() {
-        return game.passes;
-    }
-    game.getPasses = getPasses;
     function showContinuePlayingOrAgreeButtons() {
-        return game.passes == 2 && isMyTurn();
+        return isMyTurn();
     }
     game.showContinuePlayingOrAgreeButtons = showContinuePlayingOrAgreeButtons;
     function continuePlayingClicked() {
         if (!showContinuePlayingOrAgreeButtons())
             return;
         log.info("continuePlayingClicked");
-        game.passes = 0;
         game.score = { white: 0, black: 0 };
-        resetDeadSets();
     }
     game.continuePlayingClicked = continuePlayingClicked;
-    function agreeClicked() {
-        if (!showContinuePlayingOrAgreeButtons())
-            return;
-        log.info("agreeClicked");
-        var scoreDiff = game.score.black - game.score.white - 6.5; // komi is 6.5 points (on all board sizes.)
-        var endMatchScores = scoreDiff > 0 ? [1, 0] : [0, 1];
-        log.info("scores=", game.score, " endMatchScores=", endMatchScores);
-        makeMove(gameLogic.createEndMove(game.currentUpdateUI.state, endMatchScores));
-    }
-    game.agreeClicked = agreeClicked;
     function showConfirmButton() {
         return game.moveToConfirm != null;
     }
@@ -32180,17 +32183,9 @@ var game;
     function confirmClicked() {
         if (!showConfirmButton())
             return;
-        log.info("confirmClicked, passes=", game.passes, " moveToConfirm=", game.moveToConfirm);
-        if (isConfirmingPass() && game.passes >= 1) {
-            // Game is over, so let's mark dead groups.
-            showModal('MODAL_TITLE_MARK_DEAD', 'MODAL_BODY_MARK_DEAD');
-            initDeadSets();
-        }
-        else {
-            cellClicked(game.moveToConfirm.row, game.moveToConfirm.col);
-            clearClickToDrag();
-            game.moveToConfirm = null;
-        }
+        cellClicked(game.moveToConfirm.row, game.moveToConfirm.col);
+        clearClickToDrag();
+        game.moveToConfirm = null;
     }
     game.confirmClicked = confirmClicked;
     function showModal(titleId, bodyId) {
@@ -32228,10 +32223,10 @@ var game;
     }
     game.getMatrixTill = getMatrixTill;
     function handleDragEvent(type, clientX, clientY) {
-        if (!isHumanTurn() || game.passes == 2) {
+        if (!isHumanTurn()) {
             return; // if the game is over, do not display dragging effect
         }
-        if (type === "touchstart" && game.moveToConfirm != null && game.deadBoard == null) {
+        if (type === "touchstart" && game.moveToConfirm != null) {
             game.moveToConfirm = null;
             game.$rootScope.$apply();
         }
@@ -32248,12 +32243,11 @@ var game;
         var col = Math.floor(game.dim * x / game.boardArea.clientWidth);
         var row = Math.floor(game.dim * y / game.boardArea.clientHeight);
         // if the cell is not empty, don't preview the piece, but still show the dragging lines
-        if ((game.board[row][col] !== '' && game.deadBoard == null) ||
-            (game.board[row][col] == '' && game.deadBoard != null)) {
+        if (game.board[row][col] !== '') {
             clearClickToDrag();
             return;
         }
-        clickToDragPiece.style.display = game.deadBoard == null ? "inline" : "none";
+        clickToDragPiece.style.display = "inline";
         draggingLines.style.display = "inline";
         var centerXY = getSquareCenterXY(row, col);
         verticalDraggingLine.setAttribute("x1", "" + centerXY.x);
@@ -32294,52 +32288,8 @@ var game;
     }
     function dragDone(row, col) {
         game.$rootScope.$apply(function () {
-            if (game.deadBoard == null) {
-                game.moveToConfirm = { row: row, col: col };
-            }
-            else {
-                toggleDead(row, col);
-                clearClickToDrag();
-            }
+            game.moveToConfirm = { row: row, col: col };
         });
-    }
-    function setDeadSets(_deadBoard) {
-        game.deadBoard = _deadBoard;
-    }
-    function resetDeadSets() {
-        game.allSets = null;
-        game.deadBoard = null;
-    }
-    function initDeadSets() {
-        var sets = gameLogic.getSets(game.board);
-        game.allSets = sets.white.concat(sets.black);
-        game.deadBoard = gameLogic.createNewBoardWithElement(game.dim, false);
-    }
-    function toggleDead(row, col) {
-        if (game.deadBoard == null || game.allSets == null)
-            return; // defensive programming
-        if (game.board[row][col] == '')
-            return; // nothing there
-        var set = findSet(row, col);
-        for (var _i = 0, set_1 = set; _i < set_1.length; _i++) {
-            var point = set_1[_i];
-            game.deadBoard[point[0]][point[1]] = !game.deadBoard[point[0]][point[1]];
-        }
-    }
-    function isDead(row, col) {
-        return game.deadBoard && game.deadBoard[row][col];
-    }
-    game.isDead = isDead;
-    function findSet(row, col) {
-        for (var _i = 0, allSets_1 = game.allSets; _i < allSets_1.length; _i++) {
-            var points = allSets_1[_i];
-            for (var _a = 0, points_1 = points; _a < points_1.length; _a++) {
-                var point = points_1[_a];
-                if (point[0] == row && point[1] == col)
-                    return points;
-            }
-        }
-        throw new Error("Couldn't find set for row=" + row + " col=" + col);
     }
     function setDim(d) {
         game.dim = d;
@@ -32404,7 +32354,6 @@ var game;
         }
         game.currentUpdateUI = params;
         game.score = { white: 0, black: 0 };
-        resetDeadSets();
         clearClickToDrag();
         game.moveToConfirm = null;
         if (isFirstMove()) {
@@ -32412,8 +32361,6 @@ var game;
             game.delta = null;
             game.board = gameLogic.createNewBoard(game.dim);
             game.boardBeforeMove = gameLogic.createNewBoard(game.dim);
-            game.passes = 0;
-            game.posJustCapturedForKo = null;
             if (game.playerIdToProposal)
                 setDim(19); // Community matches are always 19x19.
         }
@@ -32424,15 +32371,6 @@ var game;
             game.dim = game.board.length;
             game.boardBeforeMove = state.boardBeforeMove;
             game.delta = state.delta;
-            game.passes = state.passes;
-            game.posJustCapturedForKo = state.posJustCapturedForKo;
-            setDeadSets(state.deadBoard);
-            if (game.passes == 2) {
-                calcScore();
-            }
-            if (showContinuePlayingOrAgreeButtons()) {
-                showModal('MODAL_TITLE_AGREE_WITH_DEAD', 'MODAL_BODY_AGREE_WITH_DEAD');
-            }
         }
         game.turnIndex = params.turnIndex;
         clickToDragPiece.src = "imgs/" + (game.turnIndex === 0 ? 'black' : 'white') + "Stone.svg";
@@ -32446,42 +32384,30 @@ var game;
         var emptyBoard = gameLogic.createNewBoard(game.dim); // has 'W' in all empty places.
         for (var row = 0; row < game.dim; row++) {
             for (var col = 0; col < game.dim; col++) {
-                if (game.deadBoard && game.deadBoard[row][col])
-                    liveBoard[row][col] = '';
                 if (liveBoard[row][col] == '')
                     emptyBoard[row][col] = 'W';
             }
         }
-        var sets = gameLogic.getSets(liveBoard);
-        for (var _i = 0, _a = sets.white; _i < _a.length; _i++) {
-            var set = _a[_i];
-            game.score.white += set.length;
-        }
-        for (var _b = 0, _c = sets.black; _b < _c.length; _b++) {
-            var set = _c[_b];
-            game.score.black += set.length;
-        }
-        var emptySets = gameLogic.getSets(emptyBoard).white;
+        /*
+       // for (let set of sets.white) score.white += set.length;
+        //for (let set of sets.black) score.black += set.length;
+        let emptySets = null;
         // For each empty group, decide if it's surrounded by black/white/both.
-        for (var _d = 0, emptySets_1 = emptySets; _d < emptySets_1.length; _d++) {
-            var emptySet = emptySets_1[_d];
-            var neighborColor = '';
-            for (var _e = 0, emptySet_1 = emptySet; _e < emptySet_1.length; _e++) {
-                var point = emptySet_1[_e];
-                var row = point[0];
-                var col = point[1];
-                neighborColor = updateColor(row - 1 >= 0 ? liveBoard[row - 1][col] : '', neighborColor);
-                neighborColor = updateColor(row + 1 < game.dim ? liveBoard[row + 1][col] : '', neighborColor);
-                neighborColor = updateColor(col - 1 >= 0 ? liveBoard[row][col - 1] : '', neighborColor);
-                neighborColor = updateColor(col + 1 < game.dim ? liveBoard[row][col + 1] : '', neighborColor);
-                if (neighborColor == 'Both')
-                    break;
-            }
-            if (neighborColor == 'W')
-                game.score.white += emptySet.length;
-            else if (neighborColor == 'B')
-                game.score.black += emptySet.length;
+        for (let emptySet of emptySets) {
+          let neighborColor: string = '';
+          for (let point of emptySet) {
+            let row = point[0];
+            let col = point[1];
+            neighborColor = updateColor(row - 1 >= 0 ? liveBoard[row - 1][col] : '', neighborColor);
+            neighborColor = updateColor(row + 1 < dim ? liveBoard[row + 1][col] : '', neighborColor);
+            neighborColor = updateColor(col - 1 >= 0 ? liveBoard[row][col - 1] : '', neighborColor);
+            neighborColor = updateColor(col + 1 < dim ? liveBoard[row][col + 1] : '', neighborColor);
+            if (neighborColor == 'Both') break;
+          }
+         // if (neighborColor == 'W') score.white += emptySet.length;
+          //else if (neighborColor == 'B') score.black += emptySet.length;
         }
+        */
     }
     game.calcScore = calcScore;
     function updateColor(color, neighborColor) {
@@ -32490,7 +32416,7 @@ var game;
     function maybeSendComputerMove() {
         if (!isComputerTurn())
             return;
-        var move = gameLogic.createComputerMove(game.board, game.passes, game.turnIndex, game.posJustCapturedForKo);
+        var move = gameLogic.createComputerMove(game.board, game.turnIndex);
         log.info("Computer move: ", move);
         makeMove(move);
     }
@@ -32500,8 +32426,7 @@ var game;
         }
         game.didMakeMove = true;
         var delta = move.state.delta;
-        var isPass = delta.row == -1 && delta.col == -1;
-        var chatDescription = isPass ? "Pass" : indexToLetter(delta.col) + indexToNumber(delta.row);
+        var chatDescription = indexToLetter(delta.col) + indexToNumber(delta.row);
         if (!game.proposals) {
             gameService.makeMove(move, null, chatDescription);
         }
@@ -32509,7 +32434,6 @@ var game;
             var myProposal = {
                 data: {
                     delta: delta,
-                    deadBoard: move.state.deadBoard,
                 },
                 playerInfo: game.yourPlayerInfo,
             };
@@ -32518,30 +32442,7 @@ var game;
                 move = null;
             }
             else {
-                // yes, making a move! The only tricky part is the last move when we select dead groups:
-                if (move.state.deadBoard) {
-                    // we have 3 proposals for selecting dead groups. I decided that a piece is dead if 2 proposals
-                    // at least agreed that it's dead (so one nasty player won't mess up the score).
-                    var deadBoardProposals = [move.state.deadBoard];
-                    for (var playerId in game.playerIdToProposal) {
-                        var deadBoard_1 = game.playerIdToProposal[playerId].data.deadBoard;
-                        if (deadBoard_1)
-                            deadBoardProposals.push(deadBoard_1);
-                    }
-                    var chosenDeadBoardProposal = gameLogic.createNewBoardWithElement(game.dim, false);
-                    for (var row = 0; row < game.dim; row++) {
-                        for (var col = 0; col < game.dim; col++) {
-                            var deadCount = 0;
-                            for (var _i = 0, deadBoardProposals_1 = deadBoardProposals; _i < deadBoardProposals_1.length; _i++) {
-                                var deadBoardProposal = deadBoardProposals_1[_i];
-                                if (deadBoardProposal[row][col])
-                                    deadCount++;
-                            }
-                            chosenDeadBoardProposal[row][col] = (deadCount >= 2);
-                        }
-                    }
-                    move.state.deadBoard = chosenDeadBoardProposal;
-                }
+                var chosenDeadBoardProposal = gameLogic.createNewBoardWithElement(game.dim, false);
             }
             gameService.makeMove(move, myProposal, chatDescription);
         }
@@ -32573,36 +32474,23 @@ var game;
     function passClicked() {
         //Clicking on the PASS button triggers this function
         //It will increment the number of passes.
-        log.log(["Clicked on pass.", game.passes]);
+        log.log(["Clicked on pass.", null]);
         game.moveToConfirm = { row: -1, col: -1 };
         clearClickToDrag();
     }
     game.passClicked = passClicked;
-    function isPassBtnEnabled() {
-        return !game.currentUpdateUI.endMatchScores && game.deadBoard == null;
-    }
-    game.isPassBtnEnabled = isPassBtnEnabled;
-    function getPassBtnClasses() {
-        return (isConfirmingPass() ? 'confirmingPass' : '') + ' text passBtn ' +
-            (isPassBtnEnabled() ? 'pass' + game.passes : 'btnAsText');
-    }
-    game.getPassBtnClasses = getPassBtnClasses;
-    function isConfirmingPass() {
-        return game.deadBoard == null && game.moveToConfirm && game.moveToConfirm.row == -1 && game.moveToConfirm.col == -1;
-    }
-    game.isConfirmingPass = isConfirmingPass;
-    function shouldHidePassButton() {
-        return showContinuePlayingOrAgreeButtons() || isComputerTurn() || (!isMyTurn() && !game.currentUpdateUI.endMatchScores) || game.hidePassButtonForTesting;
-    }
-    game.shouldHidePassButton = shouldHidePassButton;
     function getButtonValue() {
         if (game.currentUpdateUI.endMatchScores) {
-            return translate('GAME_OVER', { BLACK_SCORE: '' + game.score.black, WHITE_SCORE: '' + game.score.white });
-        }
-        switch (game.passes) {
-            case 0: return translate('PASS');
-            case 1: return translate(game.deadBoard != null ? 'SELECT_DEAD' : 'END_GAME');
-            default: return translate('PASS');
+            if (game.currentUpdateUI.endMatchScores[0] === 1 && game.currentUpdateUI.endMatchScores[1] === 0) {
+                game.score.black = 1;
+                game.score.white = 0;
+                return translate('GAME_OVER', { BLACK_SCORE: '' + game.score.black, WHITE_SCORE: '' + game.score.white });
+            }
+            if (game.currentUpdateUI.endMatchScores[1] === 1) {
+                game.score.black = 0;
+                game.score.white = 1;
+                return translate('GAME_OVER', { BLACK_SCORE: '' + game.score.black, WHITE_SCORE: '' + game.score.white });
+            }
         }
     }
     game.getButtonValue = getButtonValue;
@@ -32613,7 +32501,7 @@ var game;
         }
         try {
             var delta_2 = { row: rrow, col: ccol };
-            var move = gameLogic.createMove(game.board, game.passes, game.deadBoard, delta_2, game.turnIndex, game.posJustCapturedForKo);
+            var move = gameLogic.createMove(game.board, delta_2, game.turnIndex);
             makeMove(move);
         }
         catch (e) {
