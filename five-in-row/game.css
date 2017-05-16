@@ -49,10 +49,6 @@ body {
     transform: scale(1.6, 1.6);
 }
 
-.isDead {
-    transform: scale(0.6, 0.6);
-    animation: blinker 3s linear infinite;
-}
 
 @keyframes blinker {
     50% {
@@ -107,25 +103,6 @@ body {
     float: right;
 }
 
-.passBtn {
-    float: left;
-}
-
-.confirmingPass {
-    border: 3px solid black;
-}
-
-.pass0 {
-    background-color: black !important;
-}
-
-.pass1 {
-    background-color: black !important;
-}
-
-.continuePlayingBtn {
-    background-color: black !important;
-}
 
 .btnAsText {
     background-color: inherit !important;
@@ -142,14 +119,12 @@ body {
     width: 100%;
     height: 80%;
     background-color: rgb(125, 125, 125);
-    /*background-color: #eab860;*/
     z-index: 100;
     border-radius: 3%;
 }
 
 .buttonArea {
     position: absolute;
-    /*position: relative;*/
     display: block;
     color: rgb(125, 125, 125);
     top: 80%;
@@ -158,9 +133,6 @@ body {
     height: 20%;
 }
 
-.hidePassButton {
-    height: 100% !important;
-}
 
 .inheritFontSize {
     font-size: inherit !important;
@@ -187,7 +159,6 @@ body {
 
 button {
     background-color: rgb(125, 125, 125);
-    /*color: #eab860;*/
     color: rgb(125, 125, 125);
     margin: 20px auto 0 auto;
     padding: 5px;
