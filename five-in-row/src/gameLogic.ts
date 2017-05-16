@@ -31,8 +31,7 @@ module gameLogic {
     return angular.equals(object1, object2)
   }
 
-  // returns a new [empty] weiqi board
-  // code adapted from: http://stackoverflow.com/questions/6495187/best-way-to-generate-empty-2d-array
+  // returns a new [empty] wuziqi board
   export function createNewBoardWithElement<T>(dim: number, element: T): T[][] {
     let rows = dim;
     let cols = dim;
@@ -89,7 +88,7 @@ module gameLogic {
 
  
   
-  // evaluates WEIQI board using union-find algorithm
+  // evaluates WuZiQi board using union-find algorithm
   function evaluateBoard(board: Board, turn: number) {
     let boardAfterEval = copyObject(board);
     return boardAfterEval;
