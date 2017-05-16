@@ -94,7 +94,7 @@ module game {
         "en": "CONFIRM",
         "iw": "אשר",
         "pt": "CONFIRMAR",
-        "zh": "确认",
+        "zh": "确 认",
         "el": "ΕΠΙΒΕΒΑΙΏΝΩ",
         "fr": "CONFIRMER",
         "hi": "पुष्टि करें",
