@@ -59,7 +59,7 @@ var game;
                 "en": "Opponent is choosing the board size, and making the first move.",
                 "iw": "יריב הוא בחירת גודל הלוח, ועושה את הצעד הראשון.",
                 "pt": "Adversário é escolher o tamanho da placa e fazer o primeiro movimento.",
-                "zh": "对手选择棋盘大小，并下子",
+                "zh": "对手选择棋盘大小，并下子。",
                 "el": "Αντίπαλος είναι η επιλογή του μεγέθους του σκάφους, και να κάνει την πρώτη κίνηση.",
                 "fr": "Adversaire est de choisir la taille du conseil d'administration, et de faire le premier pas.",
                 "hi": "प्रतिद्वन्दी बोर्ड आकार का चयन किया जाता है, और पहला कदम बना रही है।",
@@ -349,18 +349,15 @@ var game;
             game.$timeout(maybeSendComputerMove, 500);
         }
     }
-
-
     /*
-    function calcScore() {
-        game.score = { white: 0, black: 0 };
-        var liveBoard = angular.copy(game.board);
-        var emptyBoard = gameLogic.createNewBoard(game.dim); // has 'W' in all empty places.
-        for (var row = 0; row < game.dim; row++) {
-            for (var col = 0; col < game.dim; col++) {
-                if (liveBoard[row][col] == '')
-                    emptyBoard[row][col] = 'W';
-            }
+      export function calcScore() {
+        score = {white: 0, black: 0};
+        let liveBoard = angular.copy(board);
+        let emptyBoard = gameLogic.createNewBoard(dim); // has 'W' in all empty places.
+        for (let row = 0 ; row < dim; row++) {
+          for (let col = 0 ; col < dim; col++) {
+             if (liveBoard[row][col] == '') emptyBoard[row][col] = 'W';
+          }
         }
         /*
        // for (let set of sets.white) score.white += set.length;
@@ -382,10 +379,9 @@ var game;
           //else if (neighborColor == 'B') score.black += emptySet.length;
         }
         
-    }
-    game.calcScore = calcScore;
-
-    */
+      }
+    
+      */
     function updateColor(color, neighborColor) {
         return color == '' ? neighborColor : (neighborColor == color || neighborColor == '' ? color : 'Both');
     }

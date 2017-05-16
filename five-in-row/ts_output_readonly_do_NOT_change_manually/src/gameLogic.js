@@ -109,9 +109,14 @@ var gameLogic;
     // up and down
     function udCount(dim, board, temp, x, y) {
         var count = 0;
+        console.warn("SQR's home = " + board[x][y]);
+        console.warn("SQR's fake home = " + temp);
         for (var i = x - 1; i >= 0; i--) {
+            //console.warn("SQR's home = " + board[i][y]);
             if (angular.equals(board[i][y], temp)) {
+                //count++;
                 ++count;
+                console.warn("SQR00 = " + count);
             }
             else {
                 break;
@@ -119,12 +124,16 @@ var gameLogic;
         }
         for (var i = x + 1; i < dim; i++) {
             if (angular.equals(board[i][y], temp)) {
+                //count++;
                 ++count;
+                console.warn("SQR11 = " + count);
             }
             else {
+                console.warn("SQR bad bad! ");
                 break;
             }
         }
+        console.warn("lr count: " + count);
         return count;
     }
     // left and right
@@ -132,6 +141,7 @@ var gameLogic;
         var count = 0;
         for (var i = y - 1; i >= 0; i--) {
             if (angular.equals(board[x][i], temp)) {
+                //count++;
                 ++count;
             }
             else {
@@ -141,6 +151,7 @@ var gameLogic;
         for (var i = y + 1; i < dim; i++) {
             if (angular.equals(board[x][i], temp)) {
                 ++count;
+                //count++;
             }
             else {
                 break;
@@ -153,6 +164,7 @@ var gameLogic;
         var count = 0;
         for (var i = x + 1, j = y - 1; i < dim && j >= 0;) {
             if (angular.equals(board[i][j], temp)) {
+                //count++;
                 ++count;
             }
             else {
@@ -164,6 +176,7 @@ var gameLogic;
         for (var i = x - 1, j = y + 1; i >= 0 && j < dim;) {
             if (angular.equals(board[i][j], temp)) {
                 ++count;
+                //count++;
             }
             else {
                 break;
@@ -179,6 +192,7 @@ var gameLogic;
         for (var i = x - 1, j = y - 1; i >= 0 && j >= 0;) {
             if (angular.equals(board[i][j], temp)) {
                 ++count;
+                //count++;
             }
             else {
                 break;
@@ -189,6 +203,7 @@ var gameLogic;
         for (var i = x + 1, j = y + 1; i < dim && j < dim;) {
             if (angular.equals(board[i][j], temp)) {
                 ++count;
+                //count++;
             }
             else {
                 break;
@@ -204,7 +219,9 @@ var gameLogic;
         var temp = 'B'; //default:black 
         if (turnIndex === 0) {
             temp = 'W';
-        } 
+        } //白色  
+        //console.warn("llllllllllll: " + temp);
+        // console.log("temp=" + temp);
         if (udCount(dim, board, temp, x, y) === 4) {
             count = udCount(dim, board, temp, x, y);
         }
@@ -217,6 +234,7 @@ var gameLogic;
         else if (ldCount(dim, board, temp, x, y) === 4) {
             count = ldCount(dim, board, temp, x, y);
         }
+        //console.warn("is_wim count: " + count);
         return count;
     }
     function createMove(board, delta, turnIndexBeforeMove) {
@@ -237,6 +255,7 @@ var gameLogic;
         var turnIndexAfterMove = 1 - turnIndexBeforeMove;
         var countAfterMove = isWin(dim, boardAfterMove, turnIndexAfterMove, row, col);
         if (countAfterMove === 4) {
+            //throw Error('Win');
             console.warn("win: " + turnIndexBeforeMove);
             if (turnIndexAfterMove === 0) {
                 endMatchScores = [0, 1];
