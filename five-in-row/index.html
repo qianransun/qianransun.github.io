@@ -70,49 +70,19 @@
                     style="display:none; position:absolute; z-index: 31; width: {{100 / game.dim}}%; height: {{100 / game.dim}}%;"
                     src="imgs/whiteStone.svg">
                 </svg>
-<!--
-                <div style="width: 100%; height: {{100/game.dim/2}}%; top:100%; left:0; position:absolute;">
-                    <div ng-repeat="i in game.getIntegersTill(game.dim)"
-                         class="text inheritFontSize"
-                         style="width: {{100/game.dim}}%; height: 100%; top:0; left:{{i*100/game.dim}}%; position:absolute;">
-                         {{game.indexToLetter(i)}}
-                    </div>
-                </div>
-                <div style="width: 100%; height: {{100/game.dim/2}}%; top:-{{100/game.dim/2}}%; left:0; position:absolute;">
-                    <div ng-repeat="i in game.getIntegersTill(game.dim)"
-                         class="text inheritFontSize"
-                         style="width: {{100/game.dim}}%; bottom:0; left:{{i*100/game.dim}}%; position:absolute;">
-                         {{game.indexToLetter(i)}}
-                    </div>
-                </div>
-                <div style="height: 100%; width: {{100/game.dim/1.5}}%; top:0; left:-{{100/game.dim/1.5}}%; position:absolute;">
-                    <div ng-repeat="i in game.getIntegersTill(game.dim)"
-                         class="text inheritFontSize"
-                         style="direction: rtl; display: flex; align-items: center; height: {{100/game.dim}}%; line-height: {{100/game.dim}}%;width: 100%; left:0; top:{{i*100/game.dim}}%; position:absolute;">
-                         {{game.indexToNumber(i)}}
-                    </div>
-                </div>  
-                <div style="height: 100%; width: {{100/game.dim/1.5}}%; top:0; right:-{{100/game.dim/1.5}}%; position:absolute;">
-                    <div ng-repeat="i in game.getIntegersTill(game.dim)"
-                         class="text inheritFontSize"
-                         style="display: flex; align-items: center; height: {{100/game.dim}}%; line-height: {{100/game.dim}}%;width: 100%; left:0; top:{{i*100/game.dim}}%; position:absolute;">
-                         {{game.indexToNumber(i)}}
-                    </div>
-                </div>   
-                    
-                    -->
-				<svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg" style="position:absolute; margin:auto;">
-					<defs>
-						<linearGradient id="lg1">
-							<stop offset="25%" stop-color="yellow" />
-							<stop offset="55%" stop-color="#eab860" />
-							<stop offset="82%" stop-color="#eec0c0" />
-							<stop offset="98%" stop-color="grey" />
-						</linearGradient>
-					</defs>
-					<!--rect fill="white" x="250" y="250" rx="30" ry="30" width="100%" height="100%" style="opacity:0.5" /-->
-					<rect fill="url(#lg1)" x="0" y="0" rx="30" ry="30" width="100%" height="100%" style="stroke:black;stroke-width:5;opacity:0.98" />
-				</svg>
+
+		<svg width="100%" height="100%" version="1.1" xmlns="http://www.w3.org/2000/svg" style="position:absolute; margin:auto;">
+			<defs>
+				<linearGradient id="lg1">
+					<stop offset="25%" stop-color="yellow" />
+					<stop offset="55%" stop-color="#eab860" />
+					<stop offset="82%" stop-color="#eec0c0" />
+					<stop offset="98%" stop-color="grey" />
+				</linearGradient>
+			</defs>
+			<!--rect fill="white" x="250" y="250" rx="30" ry="30" width="100%" height="100%" style="opacity:0.5" /-->
+			<rect fill="url(#lg1)" x="0" y="0" rx="30" ry="30" width="100%" height="100%" style="stroke:black;stroke-width:5;opacity:0.98" />
+		</svg>
 									
                 <svg width="100%" height="100%" style="position:absolute; margin:auto;">
                     <line ng-repeat="i in game.getIntegersTill(game.dim)"
