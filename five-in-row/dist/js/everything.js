@@ -31868,22 +31868,19 @@ var gameLogic;
         var temp = 'B'; //default:black 
         if (turnIndex === 0) {
             temp = 'W';
-        } //白色  
-        //console.warn("llllllllllll: " + temp);
-        // console.log("temp=" + temp);
-        if (udCount(dim, board, temp, x, y) === 4) {
+        }
+        if (udCount(dim, board, temp, x, y) >= 4) {
             count = udCount(dim, board, temp, x, y);
         }
-        else if (lrCount(dim, board, temp, x, y) === 4) {
+        else if (lrCount(dim, board, temp, x, y) >= 4) {
             count = lrCount(dim, board, temp, x, y);
         }
-        else if (rdCount(dim, board, temp, x, y) === 4) {
+        else if (rdCount(dim, board, temp, x, y) >= 4) {
             count = rdCount(dim, board, temp, x, y);
         }
-        else if (ldCount(dim, board, temp, x, y) === 4) {
+        else if (ldCount(dim, board, temp, x, y) >= 4) {
             count = ldCount(dim, board, temp, x, y);
         }
-        //console.warn("is_wim count: " + count);
         return count;
     }
     function createMove(board, delta, turnIndexBeforeMove) {
@@ -31903,8 +31900,7 @@ var gameLogic;
         var endMatchScores = null;
         var turnIndexAfterMove = 1 - turnIndexBeforeMove;
         var countAfterMove = isWin(dim, boardAfterMove, turnIndexAfterMove, row, col);
-        if (countAfterMove === 4) {
-            //throw Error('Win');
+        if (countAfterMove >= 4) {
             console.warn("win: " + turnIndexBeforeMove);
             if (turnIndexAfterMove === 0) {
                 endMatchScores = [0, 1];
@@ -32287,39 +32283,6 @@ var game;
             game.$timeout(maybeSendComputerMove, 500);
         }
     }
-    /*
-      export function calcScore() {
-        score = {white: 0, black: 0};
-        let liveBoard = angular.copy(board);
-        let emptyBoard = gameLogic.createNewBoard(dim); // has 'W' in all empty places.
-        for (let row = 0 ; row < dim; row++) {
-          for (let col = 0 ; col < dim; col++) {
-             if (liveBoard[row][col] == '') emptyBoard[row][col] = 'W';
-          }
-        }
-        /*
-       // for (let set of sets.white) score.white += set.length;
-        //for (let set of sets.black) score.black += set.length;
-        let emptySets = null;
-        // For each empty group, decide if it's surrounded by black/white/both.
-        for (let emptySet of emptySets) {
-          let neighborColor: string = '';
-          for (let point of emptySet) {
-            let row = point[0];
-            let col = point[1];
-            neighborColor = updateColor(row - 1 >= 0 ? liveBoard[row - 1][col] : '', neighborColor);
-            neighborColor = updateColor(row + 1 < dim ? liveBoard[row + 1][col] : '', neighborColor);
-            neighborColor = updateColor(col - 1 >= 0 ? liveBoard[row][col - 1] : '', neighborColor);
-            neighborColor = updateColor(col + 1 < dim ? liveBoard[row][col + 1] : '', neighborColor);
-            if (neighborColor == 'Both') break;
-          }
-         // if (neighborColor == 'W') score.white += emptySet.length;
-          //else if (neighborColor == 'B') score.black += emptySet.length;
-        }
-        
-      }
-    
-      */
     function updateColor(color, neighborColor) {
         return color == '' ? neighborColor : (neighborColor == color || neighborColor == '' ? color : 'Both');
     }

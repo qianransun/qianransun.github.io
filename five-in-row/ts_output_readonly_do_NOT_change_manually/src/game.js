@@ -349,39 +349,6 @@ var game;
             game.$timeout(maybeSendComputerMove, 500);
         }
     }
-    /*
-      export function calcScore() {
-        score = {white: 0, black: 0};
-        let liveBoard = angular.copy(board);
-        let emptyBoard = gameLogic.createNewBoard(dim); // has 'W' in all empty places.
-        for (let row = 0 ; row < dim; row++) {
-          for (let col = 0 ; col < dim; col++) {
-             if (liveBoard[row][col] == '') emptyBoard[row][col] = 'W';
-          }
-        }
-        /*
-       // for (let set of sets.white) score.white += set.length;
-        //for (let set of sets.black) score.black += set.length;
-        let emptySets = null;
-        // For each empty group, decide if it's surrounded by black/white/both.
-        for (let emptySet of emptySets) {
-          let neighborColor: string = '';
-          for (let point of emptySet) {
-            let row = point[0];
-            let col = point[1];
-            neighborColor = updateColor(row - 1 >= 0 ? liveBoard[row - 1][col] : '', neighborColor);
-            neighborColor = updateColor(row + 1 < dim ? liveBoard[row + 1][col] : '', neighborColor);
-            neighborColor = updateColor(col - 1 >= 0 ? liveBoard[row][col - 1] : '', neighborColor);
-            neighborColor = updateColor(col + 1 < dim ? liveBoard[row][col + 1] : '', neighborColor);
-            if (neighborColor == 'Both') break;
-          }
-         // if (neighborColor == 'W') score.white += emptySet.length;
-          //else if (neighborColor == 'B') score.black += emptySet.length;
-        }
-        
-      }
-    
-      */
     function updateColor(color, neighborColor) {
         return color == '' ? neighborColor : (neighborColor == color || neighborColor == '' ? color : 'Both');
     }

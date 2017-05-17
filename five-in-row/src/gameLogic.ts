@@ -242,22 +242,19 @@ module gameLogic {
         var temp = 'B'; //default:black 
         if (turnIndex === 0) {
             temp = 'W';
-        } //白色  
-        //console.warn("llllllllllll: " + temp);
-        // console.log("temp=" + temp);
-        if (udCount(dim, board, temp, x, y) === 4) {
+        } 
+        if (udCount(dim, board, temp, x, y) >= 4) {
             count = udCount(dim, board, temp, x, y);
         }
-        else if (lrCount(dim, board, temp, x, y) === 4) {
+        else if (lrCount(dim, board, temp, x, y) >= 4) {
             count = lrCount(dim, board, temp, x, y);
         }
-        else if (rdCount(dim, board, temp, x, y) === 4) {
+        else if (rdCount(dim, board, temp, x, y) >= 4) {
             count = rdCount(dim, board, temp, x, y);
         }
-        else if (ldCount(dim, board, temp, x, y) === 4) {
+        else if (ldCount(dim, board, temp, x, y) >= 4) {
             count = ldCount(dim, board, temp, x, y);
         }
-        //console.warn("is_wim count: " + count);
         return count;
     }
 
@@ -285,8 +282,7 @@ module gameLogic {
     let endMatchScores: number[] = null;
     let turnIndexAfterMove = 1 - turnIndexBeforeMove;
     var countAfterMove = isWin(dim, boardAfterMove, turnIndexAfterMove, row, col);
-     if (countAfterMove === 4) {
-            //throw Error('Win');
+     if (countAfterMove >= 4) {
             console.warn("win: " + turnIndexBeforeMove);
             if (turnIndexAfterMove === 0) {
                 endMatchScores = [0, 1];
